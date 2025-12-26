@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Sprite Studio</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -18,8 +19,10 @@
         <aside class="ui-panel">
             <div class="panel-fixed">
                 <h2 class="panel-title">Sprite Studio Pro</h2>
-                <label>1. Import Sprite Sheet</label>
-                <input type="file" id="upload" accept="image/*" style="width:100%; padding: 8px; background: #111; border: 1px solid #444; border-radius: 4px;">
+                <div class="control-group" id="importStep">
+                    <label>1. Import Sprite Sheet</label>
+                    <input type="file" id="upload" accept="image/*" style="width:100%; padding: 8px; background: #111; border: 1px solid #444; border-radius: 4px;">
+                </div>
             </div>
 
             <div class="panel-scroll">
@@ -70,8 +73,9 @@
                 <div class="accordion">
                     <div class="acc-header">4. Export</div>
                     <div class="acc-content">
-                        <label>FPS</label>
-                        <input type="range" id="speedSlider" min="30" max="800" value="150" style="width:100%">
+                        <label>Speed: <span id="fpsDisplaySidebar" class="editable-val" title="Click to Type FPS">12</span> FPS</label>
+                        <input type="range" id="speedSlider" min="16" max="500" value="83" style="width:100%">
+                        
                         <div class="preview-card" style="cursor:pointer;" title="Click to Inspect">
                             <canvas id="previewCanvas" width="128" height="128"></canvas>
                             <div id="previewNum" style="font-size:0.7em; color:#888; margin-top:5px;">Frame: 0</div>
@@ -94,24 +98,40 @@
             
             <div class="modal-stage" id="modalStage">
                 <canvas id="modalCanvas"></canvas>
+                <div style="position:absolute; bottom:10px; right:10px; color:rgba(255,255,255,0.5); font-size:0.7em; pointer-events:none;">Scroll/Pinch to Zoom</div>
             </div>
 
             <div class="modal-controls">
                 <div class="play-controls">
-                    <button class="btn-icon" onclick="stepFrame(-1)" title="Previous (Left Arrow)">◀</button>
-                    <button class="btn-icon big" id="playPauseBtn" onclick="togglePlay()" title="Play/Pause (Space)">⏸</button>
-                    <button class="btn-icon" onclick="stepFrame(1)" title="Next (Right Arrow)">▶</button>
+                    <button class="btn-icon" onclick="stepFrame(-1)" title="Previous">◀</button>
+                    <button class="btn-icon big" id="playPauseBtn" onclick="togglePlay()" title="Space">⏸</button>
+                    <button class="btn-icon" onclick="stepFrame(1)" title="Next">▶</button>
                 </div>
 
-                <div class="zoom-controls">
-                    <button class="btn-icon" onclick="adjustZoom(-0.5)">-</button>
-                    <span id="zoomLevel" style="min-width:60px; text-align:center;">1.0x</span>
-                    <button class="btn-icon" onclick="adjustZoom(0.5)">+</button>
+                <div class="speed-area">
+                    <label style="margin:0; font-size:0.8em; color:#aaa;">Speed:</label>
+                    <span id="fpsDisplayModal" class="editable-val" title="Click to Type FPS">12</span>
+                    <span style="font-size:0.8em; color:#aaa;">FPS</span>
                 </div>
             </div>
 
             <div class="film-strip-wrap">
                 <div id="filmStrip" class="film-strip"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tutorialOverlay">
+        <div id="tutorialSpotlight"></div>
+        <div id="tutorialCard">
+            <div class="t-header"><span id="tTitle">Welcome</span></div>
+            <div class="t-body" id="tContent"></div>
+            <div class="t-footer">
+                <span class="t-steps" id="tStepCount">1 / 5</span>
+                <div>
+                    <button class="btn-tut secondary" onclick="skipTutorial()">Skip</button>
+                    <button class="btn-tut primary" onclick="nextStep()">Next</button>
+                </div>
             </div>
         </div>
     </div>
