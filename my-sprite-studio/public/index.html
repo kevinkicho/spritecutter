@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>AI Sprite Studio: Anchor Edition</title>
+    <title>AI Sprite Studio</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
@@ -16,51 +16,70 @@
         </section>
 
         <aside class="ui-panel">
-            <h2>Sprite Studio Pro</h2>
+            <h2 style="margin: 0 0 10px 0; font-size: 1.1em; color: #fff; text-transform: uppercase;">Sprite Studio Pro</h2>
             
             <div class="control-group">
-                <label>1. Upload</label>
-                <input type="file" id="upload" accept="image/*">
+                <label>1. Import Sprite Sheet</label>
+                <input type="file" id="upload" accept="image/*" style="width:100%; padding: 5px; background: #111; border: 1px solid #444; border-radius: 4px;">
             </div>
 
             <div class="control-group">
-                <label>2. Smart Variations</label>
-                <div id="variationGrid" class="sequencer-grid" style="grid-template-columns: 1fr 1fr 1fr; max-height: 120px; overflow-y: auto;"></div>
+                <label>2. Detection Sensitivity</label>
+                <p style="font-size: 0.7em; color: #888; margin-bottom: 5px;">Click to filter noise levels:</p>
+                <div id="variationGrid" class="sequencer-grid" style="grid-template-columns: 1fr 1fr 1fr; max-height: 100px; overflow-y: auto;"></div>
             </div>
 
-            <div class="control-group">
-                <label>3. Tools</label>
-                <div class="mode-switch">
-                    <button id="modeEdit" class="mode-btn active">✋ Edit Boxes</button>
-                    <button id="modeAnchor" class="mode-btn">⚓ Set Anchors</button>
+            <div>
+                <div class="acc-header active">3. Anchors & Template</div>
+                <div class="acc-content show">
+                    <p style="font-size: 0.7em; color: #00bcd4; margin-bottom:10px;">
+                        Step A: Click a sprite to select it.<br>
+                        Step B: Click an anchor preset below.
+                    </p>
+
+                    <div class="preset-grid">
+                        <button class="preset-btn" onclick="applyPreset('top')" title="Top">⬆</button>
+                        <button class="preset-btn" onclick="applyPreset('bottom')" title="Bottom">⬇</button>
+                        <button class="preset-btn" onclick="applyPreset('left')" title="Left">⬅</button>
+                        <button class="preset-btn" onclick="applyPreset('right')" title="Right">➡</button>
+                        
+                        <button class="preset-btn" onclick="applyPreset('top-left')" title="Top Left">↖</button>
+                        <button class="preset-btn" onclick="applyPreset('top-right')" title="Top Right">↗</button>
+                        <button class="preset-btn" onclick="applyPreset('bottom-left')" title="Bottom Left">↙</button>
+                        <button class="preset-btn" onclick="applyPreset('bottom-right')" title="Bottom Right">↘</button>
+                    </div>
+
+                    <button class="btn-ghost" onclick="applyPreset('center')">Reset Selection to Center</button>
+                    
+                    <hr style="border:0; border-top:1px solid #333; margin:10px 0;">
+                    <p style="font-size: 0.7em; color: #ddd;">
+                        Step C: <b>Double-click</b> a "Perfect Box" to apply its size to all others.
+                    </p>
                 </div>
-                <p id="toolTip" style="font-size: 0.7em; color: #888; margin-top:5px;">
-                    Edit Mode: Drag edges to resize.<br>
-                    Anchor Mode: Click a side (Top/Bottom/Left/Right) to lock it.
-                </p>
-                <button id="resetCuts" class="btn-ghost" style="margin-top:10px;">Reset All</button>
             </div>
 
-            <div class="control-group">
-                <label>4. Template Action</label>
-                <p style="font-size: 0.7em; color: #00bcd4;">Double-click a box to apply its size to all others (respecting their anchors).</p>
+            <div>
+                <div class="acc-header">4. Animation Sequence</div>
+                <div class="acc-content">
+                    <div id="sequencerList" class="sequencer-grid"></div>
+                </div>
             </div>
 
-            <div class="control-group">
-                <label>5. Sequencer</label>
-                <div id="sequencerList" class="sequencer-grid"></div>
+            <div>
+                <div class="acc-header">5. Export</div>
+                <div class="acc-content">
+                    <label>FPS Speed</label>
+                    <input type="range" id="speedSlider" min="30" max="800" value="150" style="width:100%">
+                    
+                    <div class="preview-card">
+                        <canvas id="previewCanvas" width="128" height="128"></canvas>
+                    </div>
+                    
+                    <button id="zipBtn" class="main-action btn-zip" style="margin-top:10px;">Download ZIP</button>
+                </div>
             </div>
-
-            <div class="control-group">
-                <label>6. Speed</label>
-                <input type="range" id="speedSlider" min="30" max="800" value="150" style="width:100%">
-            </div>
-
-            <button id="zipBtn" class="btn-zip">Download ZIP</button>
-
-            <div class="preview-card">
-                <canvas id="previewCanvas" width="128" height="128"></canvas>
-            </div>
+            
+            <div style="height: 50px;"></div>
         </aside>
     </div>
     <script src="app.js"></script>

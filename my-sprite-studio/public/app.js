@@ -7,16 +7,43 @@ let img = new Image();
 let rawIslands = []; 
 let sprites = [];    
 let sequence = [];
+let selectedIdx = -1;
 let dragIdx = -1, dragEdge = null, currentStep = 0;
-let editMode = 'edit'; // 'edit' or 'anchor'
 
-// 1. DETECTION
+// Accordion Logic
+document.querySelectorAll('.acc-header').forEach(header => {
+    header.onclick = () => {
+        header.classList.toggle('active');
+        header.nextElementSibling.classList.toggle('show');
+    };
+});
+
+// Preset Logic
+window.applyPreset = (type) => {
+    if (selectedIdx === -1) return alert("Select a sprite first!");
+    const s = sprites[selectedIdx];
+    s.locks = { v: 'center', h: 'center' };
+
+    if (type === 'top') s.locks.v = 'top';
+    if (type === 'bottom') s.locks.v = 'bottom';
+    if (type === 'left') s.locks.h = 'left';
+    if (type === 'right') s.locks.h = 'right';
+
+    if (type === 'top-left') { s.locks.v = 'top'; s.locks.h = 'left'; }
+    if (type === 'top-right') { s.locks.v = 'top'; s.locks.h = 'right'; }
+    if (type === 'bottom-left') { s.locks.v = 'bottom'; s.locks.h = 'left'; }
+    if (type === 'bottom-right') { s.locks.v = 'bottom'; s.locks.h = 'right'; }
+
+    render();
+    document.getElementById('aiStatus').innerText = `Sprite ${selectedIdx} anchored: ${type}`;
+};
+
+// Detection
 function runDetection() {
     const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
     const width = canvas.width;
     const height = canvas.height;
     const visited = new Uint8Array(width * height);
-    
     rawIslands = [];
 
     for (let y = 0; y < height; y++) {
@@ -28,7 +55,6 @@ function runDetection() {
             }
         }
     }
-    
     generateVariationsUI();
     applyVariation(5);
 }
@@ -48,19 +74,15 @@ function floodFill(startX, startY, width, height, data, visited) {
     return { x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1 };
 }
 
-// 2. VARIATIONS & STATE
 function generateVariationsUI() {
     const grid = document.getElementById('variationGrid');
     if (!grid) return;
     grid.innerHTML = "";
-    
     for (let i = 1; i <= 20; i++) {
         const btn = document.createElement('div');
         btn.className = "seq-item";
         btn.style.fontSize = "10px";
-        btn.style.cursor = "pointer";
-        const count = rawIslands.filter(s => s.w >= i && s.h >= i).length;
-        btn.innerText = `Var ${i}\n(${count})`;
+        btn.innerText = `Var ${i}`;
         btn.onclick = () => applyVariation(i);
         grid.appendChild(btn);
     }
@@ -68,73 +90,44 @@ function generateVariationsUI() {
 
 function applyVariation(sensitivity) {
     const filtered = rawIslands.filter(s => s.w >= sensitivity && s.h >= sensitivity);
-    // Initialize with default locks (Center/Center)
-    sprites = filtered.map(s => ({ 
-        ...s,
-        locks: { v: 'center', h: 'center' } // v: top/bottom/center, h: left/right/center
-    }));
-    
+    sprites = filtered.map(s => ({ ...s, origin: {...s}, locks: { v: 'center', h: 'center' } }));
     sequence = sprites.map((_, i) => i);
+    selectedIdx = -1;
     updateSequencer();
     render();
-    document.getElementById('aiStatus').innerText = `Variation ${sensitivity} applied. Switch modes to set anchors.`;
 }
 
-// 3. INTERACTION CONTROLLER
-document.getElementById('modeEdit').onclick = () => setMode('edit');
-document.getElementById('modeAnchor').onclick = () => setMode('anchor');
-
-function setMode(mode) {
-    editMode = mode;
-    document.getElementById('modeEdit').classList.toggle('active', mode === 'edit');
-    document.getElementById('modeAnchor').classList.toggle('active', mode === 'anchor');
-    const tip = mode === 'edit' ? "Edit Mode: Drag edges to resize." : "Anchor Mode: Click sides to lock (Red = Locked). Click center to reset.";
-    document.getElementById('toolTip').innerText = tip;
-    render();
-}
-
-// MOUSE LOGIC
+// Mouse Logic
 canvas.onmousedown = (e) => {
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
     const mx = (e.clientX - rect.left) * scaleX;
     const my = (e.clientY - rect.top) * scaleY;
-    const p = 12; // hit padding
+    const p = 12;
+
+    const clicked = sprites.findIndex(s => mx > s.x-p && mx < s.x+s.w+p && my > s.y-p && my < s.y+s.h+p);
     
-    // Find clicked sprite
-    const clickedIdx = sprites.findIndex(s => mx > s.x-p && mx < s.x+s.w+p && my > s.y-p && my < s.y+s.h+p);
-    
-    if (clickedIdx === -1) return;
-    const s = sprites[clickedIdx];
-
-    // Determine where specifically was clicked
-    let clickedPart = null;
-    if (Math.abs(mx - s.x) < p) clickedPart = 'left';
-    else if (Math.abs(mx - (s.x+s.w)) < p) clickedPart = 'right';
-    else if (Math.abs(my - s.y) < p) clickedPart = 'top';
-    else if (Math.abs(my - (s.y+s.h)) < p) clickedPart = 'bottom';
-    else clickedPart = 'center';
-
-    if (editMode === 'edit') {
-        // RESIZE / MOVE
-        dragIdx = clickedIdx;
-        dragEdge = (clickedPart === 'center') ? 'move' : clickedPart;
-
-    } else if (editMode === 'anchor') {
-        // SET ANCHORS
-        if (clickedPart === 'bottom') s.locks.v = (s.locks.v === 'bottom') ? 'center' : 'bottom';
-        if (clickedPart === 'top') s.locks.v = (s.locks.v === 'top') ? 'center' : 'top';
-        if (clickedPart === 'left') s.locks.h = (s.locks.h === 'left') ? 'center' : 'left';
-        if (clickedPart === 'right') s.locks.h = (s.locks.h === 'right') ? 'center' : 'right';
-        if (clickedPart === 'center') s.locks = {v: 'center', h: 'center'}; // Reset
-        
-        render(); // Update red lines
+    if (clicked !== -1) {
+        selectedIdx = clicked;
+        render(); 
+    } else {
+        selectedIdx = -1;
+        render();
+        return;
     }
+
+    const s = sprites[clicked];
+    if (Math.abs(mx - s.x) < p) dragEdge = 'left';
+    else if (Math.abs(mx - (s.x+s.w)) < p) dragEdge = 'right';
+    else if (Math.abs(my - s.y) < p) dragEdge = 'top';
+    else if (Math.abs(my - (s.y+s.h)) < p) dragEdge = 'bottom';
+    else dragEdge = 'move';
+    dragIdx = clicked;
 };
 
 window.onmousemove = (e) => {
-    if (dragIdx === -1 || editMode !== 'edit') return;
+    if (dragIdx === -1) return;
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
@@ -147,13 +140,12 @@ window.onmousemove = (e) => {
     else if (dragEdge === 'top') { s.h += (s.y - my); s.y = my; }
     else if (dragEdge === 'bottom') s.h = my - s.y;
     else if (dragEdge === 'move') { s.x = mx - s.w/2; s.y = my - s.h/2; }
-    
     render();
 };
 
 window.onmouseup = () => { dragIdx = -1; dragEdge = null; };
 
-// 4. SMART TEMPLATE APPLICATION (Respects Locks)
+// Template Logic
 canvas.ondblclick = (e) => {
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
@@ -164,53 +156,38 @@ canvas.ondblclick = (e) => {
     const target = sprites.find(s => mx > s.x && mx < s.x+s.w && my > s.y && my < s.y+s.h);
     if (!target) return;
 
-    // Apply target dims to all, respecting their individual anchors
     sprites = sprites.map(s => {
         let newX = s.x, newY = s.y;
+        if (s.locks.v === 'bottom') newY = (s.y + s.h) - target.h;
+        else if (s.locks.v === 'top') newY = s.y;
+        else newY = s.y + (s.h - target.h) / 2;
 
-        // VERTICAL LOGIC
-        if (s.locks.v === 'bottom') {
-            // Anchor Bottom: y moves, bottom edge stays fixed
-            newY = (s.y + s.h) - target.h;
-        } else if (s.locks.v === 'top') {
-            // Anchor Top: y stays fixed
-            newY = s.y;
-        } else {
-            // Anchor Center: expand/contract around center
-            newY = s.y + (s.h - target.h) / 2;
-        }
+        if (s.locks.h === 'right') newX = (s.x + s.w) - target.w;
+        else if (s.locks.h === 'left') newX = s.x;
+        else newX = s.x + (s.w - target.w) / 2;
 
-        // HORIZONTAL LOGIC
-        if (s.locks.h === 'right') {
-            newX = (s.x + s.w) - target.w;
-        } else if (s.locks.h === 'left') {
-            newX = s.x;
-        } else {
-            newX = s.x + (s.w - target.w) / 2;
-        }
-
-        return { 
-            ...s, 
-            x: newX, y: newY, 
-            w: target.w, h: target.h 
-        };
+        return { ...s, x: newX, y: newY, w: target.w, h: target.h };
     });
-
     render();
-    document.getElementById('aiStatus').innerText = `Applied ${Math.round(target.w)}x${Math.round(target.h)} template respecting anchors!`;
+    document.getElementById('aiStatus').innerText = "Applied template!";
 };
 
-// 5. RENDER
 function render() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(img, 0, 0);
     
     sprites.forEach((s, i) => {
+        if (i === selectedIdx) {
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([4, 4]);
+            ctx.strokeRect(s.x-2, s.y-2, s.w+4, s.h+4);
+            ctx.setLineDash([]);
+        }
         ctx.strokeStyle = '#00bcd4';
         ctx.lineWidth = 1;
         ctx.strokeRect(s.x, s.y, s.w, s.h);
 
-        // Draw Locks (Red Lines)
         ctx.strokeStyle = '#ff0000';
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -297,5 +274,4 @@ document.getElementById('zipBtn').onclick = async () => {
     a.click();
 };
 
-document.getElementById('resetCuts').onclick = () => applyVariation(5);
 loop();
