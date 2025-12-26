@@ -13,14 +13,16 @@ const mimeTypes = {
 };
 
 http.createServer((req, res) => {
-    let filePath = '.' + req.url;
-    if (filePath === './') filePath = './public/index.html';
+    // 1. Force everything to be looked for inside the /public folder
+    let url = req.url === '/' ? '/index.html' : req.url;
+    let filePath = path.join(__dirname, 'public', url);
 
     const extname = String(path.extname(filePath)).toLowerCase();
     const contentType = mimeTypes[extname] || 'application/octet-stream';
 
     fs.readFile(filePath, (error, content) => {
         if (error) {
+            console.log(`Error loading: ${filePath}`);
             res.writeHead(404);
             res.end('File not found');
         } else {

@@ -2,8 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Sprite Studio: Vision Edition</title>
+    <title>AI Sprite Studio: Interactive Edition</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
@@ -13,33 +12,35 @@
             <div class="canvas-scroll-wrap">
                 <canvas id="sheetCanvas"></canvas>
             </div>
-            <div class="status-bar" id="aiStatus">Ready: Upload a messy sprite sheet</div>
+            <div class="status-bar" id="aiStatus">Ready</div>
         </section>
 
         <aside class="ui-panel">
-            <h2>Vision Sprite Studio</h2>
+            <h2>Interactive Sequencer</h2>
             
             <div class="control-group">
-                <label>1. Upload Messy Sheet</label>
+                <label>1. Upload</label>
                 <input type="file" id="upload" accept="image/*">
             </div>
 
             <div class="control-group">
-                <label>2. Vision Processing</label>
-                <button id="genVariations" class="btn-blue">Generate 20 Vision Gifs</button>
-                <p style="font-size: 0.7em; color: #888; margin-top: 5px;">This will remove background and find sprite centers automatically.</p>
+                <label>2. Found Sprites (Click numbers to add)</label>
+                <div id="availableSprites" class="sequencer-grid"></div>
             </div>
-
-            <div id="variationGrid" class="control-group" style="max-height: 300px; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
-                </div>
 
             <div class="control-group">
-                <label>3. Export Selection</label>
-                <button id="zipBtn" class="btn-zip">📦 Download Selected ZIP</button>
+                <label>3. Active Sequence (Drag to reorder)</label>
+                <div id="sequencerList" class="sequencer-grid"></div>
             </div>
 
-            <div class="preview-card" id="previewWrap">
-                <label>Selected Result Preview</label>
+            <div class="control-group">
+                <label>4. Preview Settings</label>
+                <input type="range" id="speedSlider" min="30" max="800" value="150">
+            </div>
+
+            <button id="zipBtn" class="btn-zip">Download Sequence ZIP</button>
+
+            <div class="preview-card">
                 <canvas id="previewCanvas" width="128" height="128"></canvas>
             </div>
         </aside>
