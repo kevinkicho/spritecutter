@@ -1,0 +1,20 @@
+:root { --bg: #0f0f0f; --panel: #1e1e1e; --accent: #00bcd4; --text: #ddd; }
+body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; }
+.app-grid { display: grid; grid-template-columns: 1fr 350px; height: 100vh; }
+
+.editor-area { display: flex; flex-direction: column; background: #111; overflow: hidden; }
+.canvas-scroll-wrap { flex: 1; overflow: auto; display: flex; justify-content: center; align-items: center; }
+canvas { image-rendering: pixelated; border: 1px solid #333; }
+
+.ui-panel { background: var(--panel); padding: 20px; border-left: 1px solid #333; overflow-y: auto; }
+.control-group { margin-bottom: 20px; padding: 10px; background: #252525; border-radius: 8px; }
+label { font-size: 0.7em; text-transform: uppercase; color: #888; display: block; margin-bottom: 8px; }
+
+button { width: 100%; padding: 10px; border-radius: 4px; border: none; font-weight: bold; cursor: pointer; margin-top: 5px; }
+.btn-blue { background: #0288d1; color: white; }
+.btn-zip { background: #7b1fa2; color: white; }
+.btn-ghost { background: #444; color: white; }
+
+/* Engine Viewports */
+.viewport-unity { background: #383838; border: 2px solid #111; }
+.viewport-godot { background: #202531; border: 2px solid #171a21; }

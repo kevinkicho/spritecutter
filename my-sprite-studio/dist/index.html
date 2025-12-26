@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Sprite Studio Ultimate</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+    <div class="app-grid">
+        <section class="editor-area">
+            <div class="canvas-scroll-wrap">
+                <canvas id="sheetCanvas"></canvas>
+            </div>
+            <div class="status-bar" id="aiStatus">System Initializing...</div>
+        </section>
+
+        <aside class="ui-panel">
+            <h2>AI Sprite Studio</h2>
+            
+            <div class="control-group">
+                <label>1. Load Sprite Sheet</label>
+                <input type="file" id="upload" accept="image/*">
+            </div>
+
+            <div class="control-group">
+                <label>2. Training Mode</label>
+                <button id="genVariations" class="btn-blue">Generate Smart Cuts</button>
+                <div id="variationGrid" class="v-grid"></div>
+            </div>
+
+            <div class="control-group">
+                <label>3. Viewport & Playback</label>
+                <select id="viewportStyle">
+                    <option value="unity">Unity Dark Theme</option>
+                    <option value="godot">Godot Blue Theme</option>
+                </select>
+                <button id="playBtn">▶ Toggle Animation</button>
+                <input type="range" id="speedSlider" min="30" max="800" value="150">
+            </div>
+
+            <div class="control-group">
+                <label>4. Export Pipeline</label>
+                <button id="zipBtn" class="btn-zip">📦 Download All (ZIP)</button>
+                <button id="exportModelBtn" class="btn-ghost">💾 Export AI Brain</button>
+            </div>
+
+            <div class="preview-card" id="previewWrap">
+                <canvas id="previewCanvas" width="128" height="128"></canvas>
+            </div>
+        </aside>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
