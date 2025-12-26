@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>AI Sprite Studio: Interactive Edition</title>
+    <title>AI Sprite Studio: Variation Edition</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
@@ -16,26 +16,33 @@
         </section>
 
         <aside class="ui-panel">
-            <h2>Interactive Sequencer</h2>
+            <h2>Vision Sprite Studio</h2>
             
             <div class="control-group">
-                <label>1. Upload</label>
+                <label>1. Upload Sheet</label>
                 <input type="file" id="upload" accept="image/*">
             </div>
 
             <div class="control-group">
-                <label>2. Found Sprites (Click numbers to add)</label>
+                <label>2. Smart Variations</label>
+                <p style="font-size: 0.7em; color: #888;">Select a variation to apply its boxes.</p>
+                <div id="variationGrid" class="sequencer-grid" style="grid-template-columns: 1fr 1fr; max-height: 200px; overflow-y: auto;">
+                    </div>
+            </div>
+
+            <div class="control-group">
+                <label>3. Found Sprites (Interactive)</label>
                 <div id="availableSprites" class="sequencer-grid"></div>
             </div>
 
             <div class="control-group">
-                <label>3. Active Sequence (Drag to reorder)</label>
+                <label>4. Active Sequence (Drag to reorder)</label>
                 <div id="sequencerList" class="sequencer-grid"></div>
             </div>
 
             <div class="control-group">
-                <label>4. Preview Settings</label>
-                <input type="range" id="speedSlider" min="30" max="800" value="150">
+                <label>5. Playback Settings</label>
+                <input type="range" id="speedSlider" min="30" max="800" value="150" style="width:100%">
             </div>
 
             <button id="zipBtn" class="btn-zip">Download Sequence ZIP</button>
