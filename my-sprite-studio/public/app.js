@@ -3,13 +3,24 @@ const ctx = canvas.getContext('2d');
 const pCanvas = document.getElementById('previewCanvas');
 const pCtx = pCanvas.getContext('2d');
 
+// Modal Elements
+const modal = document.getElementById('animModal');
+const mCanvas = document.getElementById('modalCanvas');
+const mCtx = mCanvas.getContext('2d');
+const modalStage = document.getElementById('modalStage');
+
 let img = new Image();
 let rawIslands = []; 
 let sprites = [];    
 let sequence = [];
 let selectedIdx = -1;
-let activeVar = 20; // Default to last variation
+let activeVar = 20; 
 let dragIdx = -1, dragEdge = null, currentStep = 0;
+
+// Playback State
+let isPlaying = true;
+let isModalOpen = false;
+let modalZoom = 1.0;
 
 // Accordion Logic
 document.querySelectorAll('.acc-header').forEach(header => {
@@ -19,7 +30,7 @@ document.querySelectorAll('.acc-header').forEach(header => {
     };
 });
 
-// Detection
+// --- DETECTION ENGINE ---
 function runDetection() {
     const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
     const width = canvas.width;
@@ -37,7 +48,7 @@ function runDetection() {
         }
     }
     generateVariationsUI();
-    applyVariation(20); // Default to strictest filter
+    applyVariation(20);
 }
 
 function floodFill(startX, startY, width, height, data, visited) {
@@ -73,8 +84,6 @@ function generateVariationsUI() {
 
 function applyVariation(sensitivity) {
     activeVar = sensitivity;
-    
-    // Highlight Active
     document.querySelectorAll('#variationGrid .seq-item').forEach(b => b.classList.remove('active'));
     const activeBtn = document.getElementById(`var-btn-${sensitivity}`);
     if(activeBtn) {
@@ -94,8 +103,161 @@ function applyVariation(sensitivity) {
 
 window.resetCurrentVariation = () => {
     applyVariation(activeVar);
-    document.getElementById('aiStatus').innerText = `Variation ${activeVar} reset to defaults.`;
+    document.getElementById('aiStatus').innerText = `Variation ${activeVar} reset.`;
 };
+
+// --- MODAL LOGIC ---
+pCanvas.onclick = () => {
+    if (sequence.length === 0) return alert("Sequence is empty!");
+    isModalOpen = true;
+    modal.classList.add('open');
+    renderFilmStrip();
+    resizeModalCanvas(); // Initial size calc
+};
+
+window.closeModal = () => {
+    isModalOpen = false;
+    modal.classList.remove('open');
+};
+
+// Adjust internal canvas resolution to match display size (Fixes Cutout)
+function resizeModalCanvas() {
+    if(!isModalOpen) return;
+    const rect = modalStage.getBoundingClientRect();
+    mCanvas.width = rect.width;
+    mCanvas.height = rect.height;
+}
+window.addEventListener('resize', resizeModalCanvas);
+
+window.adjustZoom = (delta) => {
+    modalZoom = Math.max(0.5, Math.min(10.0, modalZoom + delta));
+    document.getElementById('zoomLevel').innerText = `${modalZoom.toFixed(1)}x`;
+    // Force redraw immediately
+    if(!isPlaying) loop(true);
+};
+
+window.togglePlay = () => {
+    isPlaying = !isPlaying;
+    const btn = document.getElementById('playPauseBtn');
+    btn.innerText = isPlaying ? "⏸" : "▶";
+    btn.title = isPlaying ? "Pause (Space)" : "Play (Space)";
+};
+
+window.stepFrame = (dir) => {
+    isPlaying = false;
+    document.getElementById('playPauseBtn').innerText = "▶";
+    currentStep += dir;
+    if(currentStep < 0) currentStep = sequence.length - 1;
+    loop(true); // Force single frame render
+};
+
+// Keyboard Shortcuts
+document.addEventListener('keydown', (e) => {
+    if(!isModalOpen) return;
+    if(e.code === 'Space') { e.preventDefault(); togglePlay(); }
+    if(e.code === 'ArrowRight') stepFrame(1);
+    if(e.code === 'ArrowLeft') stepFrame(-1);
+});
+
+function renderFilmStrip() {
+    const strip = document.getElementById('filmStrip');
+    strip.innerHTML = "";
+    sequence.forEach((sIdx, i) => {
+        const s = sprites[sIdx];
+        const div = document.createElement('div');
+        div.className = "film-item";
+        div.id = `film-frame-${i}`;
+        div.onclick = () => {
+            currentStep = i;
+            isPlaying = false;
+            document.getElementById('playPauseBtn').innerText = "▶";
+            loop(true);
+        };
+        
+        // Thumbnail
+        const c = document.createElement('canvas');
+        c.width = s.w; c.height = s.h;
+        const scale = Math.min(50/s.w, 50/s.h);
+        const ctx = c.getContext('2d');
+        ctx.drawImage(img, s.x, s.y, s.w, s.h, 0, 0, s.w, s.h);
+        
+        // Frame Number Overlay
+        const num = document.createElement('span');
+        num.className = "film-num";
+        num.innerText = i + 1;
+
+        div.appendChild(c);
+        div.appendChild(num);
+        strip.appendChild(div);
+    });
+}
+
+// --- LOOP ENGINE ---
+function loop(force = false) {
+    const speed = document.getElementById('speedSlider').value;
+    
+    if (sequence.length > 0) {
+        // Calculate index
+        if (!force && !isPlaying) {
+            setTimeout(loop, 100); // Idle loop
+            return; 
+        }
+
+        const frameIdx = Math.abs(currentStep % sequence.length);
+        const s = sprites[sequence[frameIdx]];
+
+        // 1. Sidebar Preview
+        pCtx.fillStyle = "#000";
+        pCtx.fillRect(0, 0, 128, 128);
+        document.getElementById('previewNum').innerText = `Frame: ${frameIdx + 1} / ${sequence.length}`;
+
+        if (s) {
+            const scale = Math.min(120/s.w, 120/s.h, 1);
+            pCtx.drawImage(img, s.x, s.y, s.w, s.h, (128-s.w*scale)/2, (128-s.h*scale)/2, s.w*scale, s.h*scale);
+        }
+
+        // 2. Modal Render
+        if (isModalOpen && s) {
+            document.getElementById('modalFrameCounter').innerText = `Frame: ${frameIdx + 1} / ${sequence.length}`;
+            
+            // Clear Stage
+            mCtx.fillStyle = "#111"; 
+            mCtx.fillRect(0, 0, mCanvas.width, mCanvas.height);
+            
+            // Draw Center Crosshair (Optional, faint)
+            mCtx.strokeStyle = "#222";
+            mCtx.beginPath();
+            mCtx.moveTo(mCanvas.width/2, 0); mCtx.lineTo(mCanvas.width/2, mCanvas.height);
+            mCtx.moveTo(0, mCanvas.height/2); mCtx.lineTo(mCanvas.width, mCanvas.height/2);
+            mCtx.stroke();
+
+            // Draw Sprite
+            const zw = s.w * modalZoom;
+            const zh = s.h * modalZoom;
+            mCtx.imageSmoothingEnabled = false; 
+            
+            // Center in flexible canvas
+            const dx = (mCanvas.width - zw) / 2;
+            const dy = (mCanvas.height - zh) / 2;
+            
+            mCtx.drawImage(img, s.x, s.y, s.w, s.h, dx, dy, zw, zh);
+
+            // Update Film Strip
+            document.querySelectorAll('.film-item').forEach(f => f.classList.remove('active'));
+            const activeFrame = document.getElementById(`film-frame-${frameIdx}`);
+            if (activeFrame) {
+                activeFrame.classList.add('active');
+                activeFrame.scrollIntoView({ behavior: 'auto', inline: 'center', block: 'nearest' });
+            }
+        }
+
+        if (isPlaying) currentStep++;
+    }
+    
+    if(!force) setTimeout(loop, speed);
+}
+
+// ... [Remaining Pool, Sequencer, Anchor, Drag, Mouse Logic preserved] ...
 
 function updatePool() {
     const pool = document.getElementById('spritePool');
@@ -270,20 +432,6 @@ function render() {
         ctx.textAlign = 'right';
         ctx.fillText(`${Math.round(s.w)}x${Math.round(s.h)}`, s.x + s.w, s.y + s.h + 10);
     });
-}
-
-function loop() {
-    if (sequence.length > 0) {
-        const s = sprites[sequence[currentStep % sequence.length]];
-        pCtx.fillStyle = "#000";
-        pCtx.fillRect(0, 0, 128, 128);
-        if (s) {
-            const scale = Math.min(120/s.w, 120/s.h, 1);
-            pCtx.drawImage(img, s.x, s.y, s.w, s.h, (128-s.w*scale)/2, (128-s.h*scale)/2, s.w*scale, s.h*scale);
-        }
-        currentStep++;
-    }
-    setTimeout(loop, document.getElementById('speedSlider').value);
 }
 
 document.getElementById('upload').onchange = (e) => {

@@ -16,7 +16,6 @@
         </section>
 
         <aside class="ui-panel">
-            
             <div class="panel-fixed">
                 <h2 class="panel-title">Sprite Studio Pro</h2>
                 <label>1. Import Sprite Sheet</label>
@@ -24,80 +23,99 @@
             </div>
 
             <div class="panel-scroll">
-                
                 <div class="accordion">
-                    <div class="acc-header active">1. Detection & Setup</div>
+                    <div class="acc-header active">1. Setup & Variations</div>
                     <div class="acc-content show">
-                        <label>Filter Sensitivity</label>
-                        <p style="font-size: 0.7em; color: #888; margin-bottom: 5px;">Active variation highlighted blue.</p>
-                        
-                        <div id="variationGrid" class="sequencer-grid" style="grid-template-columns: 1fr 1fr; max-height: 120px; margin-bottom: 8px;"></div>
-                        
-                        <button class="btn-ghost" onclick="resetCurrentVariation()">↺ Reset Box Changes</button>
+                        <label>Sensitivity</label>
+                        <div id="variationGrid" class="sequencer-grid" style="grid-template-columns: 1fr 1fr; max-height: 120px; margin-bottom:8px;"></div>
+                        <button class="btn-ghost" onclick="resetCurrentVariation()">↺ Reset Variations</button>
                     </div>
                 </div>
 
                 <div class="accordion">
-                    <div class="acc-header active">2. Anchors & Template</div>
+                    <div class="acc-header active">2. Anchors</div>
                     <div class="acc-content show">
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; background: #222; padding: 8px; border-radius: 4px;">
-                            <span style="font-size: 0.75em; font-weight: bold; color: #ddd;">TARGET:</span>
-                            <div style="display: flex; align-items: center; gap: 5px;">
-                                <input type="checkbox" id="applyAll" style="width: auto; margin: 0;">
-                                <label for="applyAll" style="font-size: 0.8em; margin: 0; color: #fff; cursor: pointer;">Apply to ALL</label>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; background:#222; padding:8px; border-radius:4px;">
+                            <span style="font-size:0.75em; font-weight:bold;">TARGET:</span>
+                            <div style="display:flex; gap:5px;">
+                                <input type="checkbox" id="applyAll" style="width:auto; margin:0;">
+                                <label for="applyAll" style="font-size:0.8em; margin:0; cursor:pointer;">ALL</label>
                             </div>
                         </div>
-
                         <div class="preset-grid">
-                            <button class="preset-btn" onclick="applyPreset('top')" title="Top">⬆</button>
-                            <button class="preset-btn" onclick="applyPreset('bottom')" title="Bottom">⬇</button>
-                            <button class="preset-btn" onclick="applyPreset('left')" title="Left">⬅</button>
-                            <button class="preset-btn" onclick="applyPreset('right')" title="Right">➡</button>
-                            <button class="preset-btn" onclick="applyPreset('top-left')" title="Top Left">↖</button>
-                            <button class="preset-btn" onclick="applyPreset('top-right')" title="Top Right">↗</button>
-                            <button class="preset-btn" onclick="applyPreset('bottom-left')" title="Bottom Left">↙</button>
-                            <button class="preset-btn" onclick="applyPreset('bottom-right')" title="Bottom Right">↘</button>
+                            <button class="preset-btn" onclick="applyPreset('top')">⬆</button>
+                            <button class="preset-btn" onclick="applyPreset('bottom')">⬇</button>
+                            <button class="preset-btn" onclick="applyPreset('left')">⬅</button>
+                            <button class="preset-btn" onclick="applyPreset('right')">➡</button>
+                            <button class="preset-btn" onclick="applyPreset('top-left')">↖</button>
+                            <button class="preset-btn" onclick="applyPreset('top-right')">↗</button>
+                            <button class="preset-btn" onclick="applyPreset('bottom-left')">↙</button>
+                            <button class="preset-btn" onclick="applyPreset('bottom-right')">↘</button>
                         </div>
-
                         <button class="btn-ghost" onclick="resetAllAnchors()">↺ Reset Anchors</button>
-                        <hr style="border:0; border-top:1px solid #333; margin:10px 0;">
-                        <p style="font-size: 0.7em; color: #888;"><b>Double-click</b> a "Perfect Box" to apply size.</p>
                     </div>
                 </div>
 
                 <div class="accordion">
                     <div class="acc-header">3. Sequencer</div>
                     <div class="acc-content">
-                        <label style="color:#888;">Available Sprites</label>
-                        <div id="spritePool" class="sequencer-grid" style="margin-bottom: 15px;"></div>
-
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                            <label style="color:#00bcd4; margin:0;">Active Loop</label>
-                            <span id="frameCount" style="font-size:0.7em; color:#fff; background:#333; padding:2px 6px; border-radius:4px;">0 Frames</span>
-                        </div>
-                        
-                        <div id="sequencerList" class="sequencer-grid" style="min-height: 80px; border: 1px dashed #444;"></div>
-                        
-                        <button class="btn-ghost" onclick="resetSequence()">↺ Reset Loop (0-N)</button>
+                        <label>Pool</label>
+                        <div id="spritePool" class="sequencer-grid" style="margin-bottom:15px;"></div>
+                        <label style="color:#00bcd4;">Loop <span id="frameCount" style="float:right; font-size:0.9em; color:#fff;">0</span></label>
+                        <div id="sequencerList" class="sequencer-grid" style="min-height:80px; border:1px dashed #444;"></div>
+                        <button class="btn-ghost" onclick="resetSequence()">↺ Reset Loop</button>
                     </div>
                 </div>
 
                 <div class="accordion">
                     <div class="acc-header">4. Export</div>
                     <div class="acc-content">
-                        <label>FPS Speed</label>
+                        <label>FPS</label>
                         <input type="range" id="speedSlider" min="30" max="800" value="150" style="width:100%">
-                        
-                        <div class="preview-card">
+                        <div class="preview-card" style="cursor:pointer;" title="Click to Inspect">
                             <canvas id="previewCanvas" width="128" height="128"></canvas>
+                            <div id="previewNum" style="font-size:0.7em; color:#888; margin-top:5px;">Frame: 0</div>
                         </div>
-                        
                         <button id="zipBtn" class="btn-zip">Download ZIP</button>
                     </div>
                 </div>
             </div>
         </aside>
     </div>
+
+    <div id="animModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            
+            <div class="modal-header">
+                <h2 style="margin:0; color:#fff; font-size:1em;">Inspector</h2>
+                <div id="modalFrameCounter" style="color:#00bcd4; font-weight:bold; font-size:0.9em;">Frame: 1 / 10</div>
+            </div>
+            
+            <div class="modal-stage" id="modalStage">
+                <canvas id="modalCanvas"></canvas>
+            </div>
+
+            <div class="modal-controls">
+                <div class="play-controls">
+                    <button class="btn-icon" onclick="stepFrame(-1)" title="Previous (Left Arrow)">◀</button>
+                    <button class="btn-icon big" id="playPauseBtn" onclick="togglePlay()" title="Play/Pause (Space)">⏸</button>
+                    <button class="btn-icon" onclick="stepFrame(1)" title="Next (Right Arrow)">▶</button>
+                </div>
+
+                <div class="zoom-controls">
+                    <button class="btn-icon" onclick="adjustZoom(-0.5)">-</button>
+                    <span id="zoomLevel" style="min-width:60px; text-align:center;">1.0x</span>
+                    <button class="btn-icon" onclick="adjustZoom(0.5)">+</button>
+                </div>
+            </div>
+
+            <div class="film-strip-wrap">
+                <div id="filmStrip" class="film-strip"></div>
+            </div>
+        </div>
+    </div>
+
     <script src="app.js"></script>
 </body>
 </html>
