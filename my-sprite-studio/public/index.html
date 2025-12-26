@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>AI Sprite Studio: Variation Edition</title>
+    <title>AI Sprite Studio: Anchor Edition</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
@@ -16,36 +16,47 @@
         </section>
 
         <aside class="ui-panel">
-            <h2>Vision Sprite Studio</h2>
+            <h2>Sprite Studio Pro</h2>
             
             <div class="control-group">
-                <label>1. Upload Sheet</label>
+                <label>1. Upload</label>
                 <input type="file" id="upload" accept="image/*">
             </div>
 
             <div class="control-group">
                 <label>2. Smart Variations</label>
-                <p style="font-size: 0.7em; color: #888;">Select a variation to apply its boxes.</p>
-                <div id="variationGrid" class="sequencer-grid" style="grid-template-columns: 1fr 1fr; max-height: 200px; overflow-y: auto;">
-                    </div>
+                <div id="variationGrid" class="sequencer-grid" style="grid-template-columns: 1fr 1fr 1fr; max-height: 120px; overflow-y: auto;"></div>
             </div>
 
             <div class="control-group">
-                <label>3. Found Sprites (Interactive)</label>
-                <div id="availableSprites" class="sequencer-grid"></div>
+                <label>3. Tools</label>
+                <div class="mode-switch">
+                    <button id="modeEdit" class="mode-btn active">✋ Edit Boxes</button>
+                    <button id="modeAnchor" class="mode-btn">⚓ Set Anchors</button>
+                </div>
+                <p id="toolTip" style="font-size: 0.7em; color: #888; margin-top:5px;">
+                    Edit Mode: Drag edges to resize.<br>
+                    Anchor Mode: Click a side (Top/Bottom/Left/Right) to lock it.
+                </p>
+                <button id="resetCuts" class="btn-ghost" style="margin-top:10px;">Reset All</button>
             </div>
 
             <div class="control-group">
-                <label>4. Active Sequence (Drag to reorder)</label>
+                <label>4. Template Action</label>
+                <p style="font-size: 0.7em; color: #00bcd4;">Double-click a box to apply its size to all others (respecting their anchors).</p>
+            </div>
+
+            <div class="control-group">
+                <label>5. Sequencer</label>
                 <div id="sequencerList" class="sequencer-grid"></div>
             </div>
 
             <div class="control-group">
-                <label>5. Playback Settings</label>
+                <label>6. Speed</label>
                 <input type="range" id="speedSlider" min="30" max="800" value="150" style="width:100%">
             </div>
 
-            <button id="zipBtn" class="btn-zip">Download Sequence ZIP</button>
+            <button id="zipBtn" class="btn-zip">Download ZIP</button>
 
             <div class="preview-card">
                 <canvas id="previewCanvas" width="128" height="128"></canvas>
