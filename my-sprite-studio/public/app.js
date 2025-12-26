@@ -18,26 +18,6 @@ document.querySelectorAll('.acc-header').forEach(header => {
     };
 });
 
-// Preset Logic
-window.applyPreset = (type) => {
-    if (selectedIdx === -1) return alert("Select a sprite first!");
-    const s = sprites[selectedIdx];
-    s.locks = { v: 'center', h: 'center' };
-
-    if (type === 'top') s.locks.v = 'top';
-    if (type === 'bottom') s.locks.v = 'bottom';
-    if (type === 'left') s.locks.h = 'left';
-    if (type === 'right') s.locks.h = 'right';
-
-    if (type === 'top-left') { s.locks.v = 'top'; s.locks.h = 'left'; }
-    if (type === 'top-right') { s.locks.v = 'top'; s.locks.h = 'right'; }
-    if (type === 'bottom-left') { s.locks.v = 'bottom'; s.locks.h = 'left'; }
-    if (type === 'bottom-right') { s.locks.v = 'bottom'; s.locks.h = 'right'; }
-
-    render();
-    document.getElementById('aiStatus').innerText = `Sprite ${selectedIdx} anchored: ${type}`;
-};
-
 // Detection
 function runDetection() {
     const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
@@ -91,11 +71,102 @@ function generateVariationsUI() {
 function applyVariation(sensitivity) {
     const filtered = rawIslands.filter(s => s.w >= sensitivity && s.h >= sensitivity);
     sprites = filtered.map(s => ({ ...s, origin: {...s}, locks: { v: 'center', h: 'center' } }));
+    
+    // Reset sequence to default
     sequence = sprites.map((_, i) => i);
+    
     selectedIdx = -1;
+    updatePool();
     updateSequencer();
     render();
 }
+
+// Update "Available Sprites" Pool
+function updatePool() {
+    const pool = document.getElementById('spritePool');
+    if(!pool) return;
+    pool.innerHTML = "";
+    
+    sprites.forEach((_, i) => {
+        const item = document.createElement('div');
+        item.className = "seq-item pool-item";
+        item.innerText = i;
+        item.title = "Click to add to loop";
+        item.onclick = () => {
+            sequence.push(i);
+            updateSequencer();
+        };
+        pool.appendChild(item);
+    });
+}
+
+// Update Active Loop
+function updateSequencer() {
+    const list = document.getElementById('sequencerList');
+    if (!list) return;
+    list.innerHTML = "";
+    sequence.forEach((sIdx, orderIdx) => {
+        const item = document.createElement('div');
+        item.className = "seq-item";
+        item.draggable = true;
+        item.innerText = sIdx;
+        
+        const rm = document.createElement('div');
+        rm.className = "remove-btn";
+        rm.innerText = "×";
+        rm.onclick = (e) => { e.stopPropagation(); sequence.splice(orderIdx, 1); updateSequencer(); };
+        item.appendChild(rm);
+
+        item.ondragstart = (e) => { e.dataTransfer.setData('idx', orderIdx); item.style.opacity = '0.5'; };
+        item.ondragend = () => item.style.opacity = '1';
+        item.ondragover = (e) => e.preventDefault();
+        item.ondrop = (e) => {
+            const from = e.dataTransfer.getData('idx');
+            const mov = sequence.splice(from, 1)[0];
+            sequence.splice(orderIdx, 0, mov);
+            updateSequencer();
+        };
+        list.appendChild(item);
+    });
+}
+
+window.resetSequence = () => {
+    sequence = sprites.map((_, i) => i);
+    updateSequencer();
+};
+
+// ... [Existing Anchor/Mouse logic remains same] ...
+window.applyPreset = (type) => {
+    const applyAll = document.getElementById('applyAll').checked;
+    const setSpriteLock = (s) => {
+        s.locks = { v: 'center', h: 'center' };
+        if (type === 'top') s.locks.v = 'top';
+        if (type === 'bottom') s.locks.v = 'bottom';
+        if (type === 'left') s.locks.h = 'left';
+        if (type === 'right') s.locks.h = 'right';
+        if (type === 'top-left') { s.locks.v = 'top'; s.locks.h = 'left'; }
+        if (type === 'top-right') { s.locks.v = 'top'; s.locks.h = 'right'; }
+        if (type === 'bottom-left') { s.locks.v = 'bottom'; s.locks.h = 'left'; }
+        if (type === 'bottom-right') { s.locks.v = 'bottom'; s.locks.h = 'right'; }
+    };
+
+    if (applyAll) {
+        if (sprites.length === 0) return alert("No sprites!");
+        sprites.forEach(s => setSpriteLock(s));
+        document.getElementById('aiStatus').innerText = `Applied '${type}' to ALL.`;
+    } else {
+        if (selectedIdx === -1) return alert("Select a sprite first!");
+        setSpriteLock(sprites[selectedIdx]);
+        document.getElementById('aiStatus').innerText = `Sprite ${selectedIdx} anchored: ${type}`;
+    }
+    render();
+};
+
+window.resetAllAnchors = () => {
+    sprites.forEach(s => s.locks = { v: 'center', h: 'center' });
+    render();
+    document.getElementById('aiStatus').innerText = "All anchors reset.";
+};
 
 // Mouse Logic
 canvas.onmousedown = (e) => {
@@ -145,7 +216,7 @@ window.onmousemove = (e) => {
 
 window.onmouseup = () => { dragIdx = -1; dragEdge = null; };
 
-// Template Logic
+// Template
 canvas.ondblclick = (e) => {
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
@@ -200,33 +271,6 @@ function render() {
         ctx.fillStyle = '#00bcd4';
         ctx.font = '10px Arial';
         ctx.fillText(i, s.x, s.y - 4);
-    });
-}
-
-function updateSequencer() {
-    const list = document.getElementById('sequencerList');
-    if (!list) return;
-    list.innerHTML = "";
-    sequence.forEach((sIdx, orderIdx) => {
-        const item = document.createElement('div');
-        item.className = "seq-item";
-        item.draggable = true;
-        item.innerText = sIdx;
-        const rm = document.createElement('div');
-        rm.className = "remove-btn";
-        rm.innerText = "×";
-        rm.onclick = (e) => { e.stopPropagation(); sequence.splice(orderIdx, 1); updateSequencer(); };
-        item.appendChild(rm);
-        item.ondragstart = (e) => { e.dataTransfer.setData('idx', orderIdx); item.style.opacity = '0.5'; };
-        item.ondragend = () => item.style.opacity = '1';
-        item.ondragover = (e) => e.preventDefault();
-        item.ondrop = (e) => {
-            const from = e.dataTransfer.getData('idx');
-            const mov = sequence.splice(from, 1)[0];
-            sequence.splice(orderIdx, 0, mov);
-            updateSequencer();
-        };
-        list.appendChild(item);
     });
 }
 

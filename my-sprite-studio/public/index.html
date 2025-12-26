@@ -16,7 +16,7 @@
         </section>
 
         <aside class="ui-panel">
-            <h2 style="margin: 0 0 10px 0; font-size: 1.1em; color: #fff; text-transform: uppercase;">Sprite Studio Pro</h2>
+            <h2 class="panel-title">Sprite Studio Pro</h2>
             
             <div class="control-group">
                 <label>1. Import Sprite Sheet</label>
@@ -25,56 +25,62 @@
 
             <div class="control-group">
                 <label>2. Detection Sensitivity</label>
-                <p style="font-size: 0.7em; color: #888; margin-bottom: 5px;">Click to filter noise levels:</p>
-                <div id="variationGrid" class="sequencer-grid" style="grid-template-columns: 1fr 1fr 1fr; max-height: 100px; overflow-y: auto;"></div>
+                <div id="variationGrid" class="sequencer-grid" style="grid-template-columns: 1fr 1fr 1fr; max-height: 100px;"></div>
             </div>
 
-            <div>
+            <div class="accordion">
                 <div class="acc-header active">3. Anchors & Template</div>
                 <div class="acc-content show">
-                    <p style="font-size: 0.7em; color: #00bcd4; margin-bottom:10px;">
-                        Step A: Click a sprite to select it.<br>
-                        Step B: Click an anchor preset below.
-                    </p>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; background: #222; padding: 8px; border-radius: 4px;">
+                        <span style="font-size: 0.75em; font-weight: bold; color: #ddd;">TARGET:</span>
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <input type="checkbox" id="applyAll" style="width: auto; margin: 0;">
+                            <label for="applyAll" style="font-size: 0.8em; margin: 0; color: #fff; cursor: pointer;">Apply to ALL</label>
+                        </div>
+                    </div>
+
+                    <p style="font-size: 0.7em; color: #00bcd4; margin-bottom:5px;">Click a preset to lock sides:</p>
 
                     <div class="preset-grid">
                         <button class="preset-btn" onclick="applyPreset('top')" title="Top">⬆</button>
                         <button class="preset-btn" onclick="applyPreset('bottom')" title="Bottom">⬇</button>
                         <button class="preset-btn" onclick="applyPreset('left')" title="Left">⬅</button>
                         <button class="preset-btn" onclick="applyPreset('right')" title="Right">➡</button>
-                        
                         <button class="preset-btn" onclick="applyPreset('top-left')" title="Top Left">↖</button>
                         <button class="preset-btn" onclick="applyPreset('top-right')" title="Top Right">↗</button>
                         <button class="preset-btn" onclick="applyPreset('bottom-left')" title="Bottom Left">↙</button>
                         <button class="preset-btn" onclick="applyPreset('bottom-right')" title="Bottom Right">↘</button>
                     </div>
 
-                    <button class="btn-ghost" onclick="applyPreset('center')">Reset Selection to Center</button>
-                    
+                    <button class="btn-ghost" onclick="resetAllAnchors()">↺ Reset All Anchors</button>
                     <hr style="border:0; border-top:1px solid #333; margin:10px 0;">
-                    <p style="font-size: 0.7em; color: #ddd;">
-                        Step C: <b>Double-click</b> a "Perfect Box" to apply its size to all others.
-                    </p>
+                    <p style="font-size: 0.7em; color: #888;"><b>Double-click</b> a "Perfect Box" to apply size.</p>
                 </div>
             </div>
 
-            <div>
-                <div class="acc-header">4. Animation Sequence</div>
-                <div class="acc-content">
-                    <div id="sequencerList" class="sequencer-grid"></div>
+            <div class="accordion">
+                <div class="acc-header active">4. Animation Sequence</div>
+                <div class="acc-content show">
+                    <label style="color:#888;">Available Sprites (Pool)</label>
+                    <p style="font-size: 0.65em; color: #666; margin-bottom:5px;">Click to add to loop:</p>
+                    <div id="spritePool" class="sequencer-grid" style="margin-bottom: 15px;"></div>
+
+                    <label style="color:#00bcd4;">Active Loop Sequence</label>
+                    <p style="font-size: 0.65em; color: #666; margin-bottom:5px;">Drag to order, 'X' to remove:</p>
+                    <div id="sequencerList" class="sequencer-grid" style="min-height: 60px; border: 1px dashed #444;"></div>
+                    
+                    <button class="btn-ghost" onclick="resetSequence()" style="margin-top: 10px;">↺ Reset Loop to 0-N</button>
                 </div>
             </div>
 
-            <div>
-                <div class="acc-header">5. Export</div>
-                <div class="acc-content">
+            <div class="accordion">
+                <div class="acc-header active">5. Export</div>
+                <div class="acc-content show">
                     <label>FPS Speed</label>
                     <input type="range" id="speedSlider" min="30" max="800" value="150" style="width:100%">
-                    
                     <div class="preview-card">
                         <canvas id="previewCanvas" width="128" height="128"></canvas>
                     </div>
-                    
                     <button id="zipBtn" class="main-action btn-zip" style="margin-top:10px;">Download ZIP</button>
                 </div>
             </div>
