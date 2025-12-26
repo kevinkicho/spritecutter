@@ -8,6 +8,7 @@ let rawIslands = [];
 let sprites = [];    
 let sequence = [];
 let selectedIdx = -1;
+let activeVar = 20; // Default to last variation
 let dragIdx = -1, dragEdge = null, currentStep = 0;
 
 // Accordion Logic
@@ -36,7 +37,7 @@ function runDetection() {
         }
     }
     generateVariationsUI();
-    applyVariation(5);
+    applyVariation(20); // Default to strictest filter
 }
 
 function floodFill(startX, startY, width, height, data, visited) {
@@ -60,82 +61,83 @@ function generateVariationsUI() {
     grid.innerHTML = "";
     for (let i = 1; i <= 20; i++) {
         const btn = document.createElement('div');
-        btn.className = "seq-item";
+        btn.className = "seq-item pool-item";
         btn.style.fontSize = "10px";
-        btn.innerText = `Var ${i}`;
+        btn.id = `var-btn-${i}`;
+        const count = rawIslands.filter(s => s.w >= i && s.h >= i).length;
+        btn.innerText = `Var ${i} (${count})`;
         btn.onclick = () => applyVariation(i);
         grid.appendChild(btn);
     }
 }
 
 function applyVariation(sensitivity) {
+    activeVar = sensitivity;
+    
+    // Highlight Active
+    document.querySelectorAll('#variationGrid .seq-item').forEach(b => b.classList.remove('active'));
+    const activeBtn = document.getElementById(`var-btn-${sensitivity}`);
+    if(activeBtn) {
+        activeBtn.classList.add('active');
+        activeBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
     const filtered = rawIslands.filter(s => s.w >= sensitivity && s.h >= sensitivity);
     sprites = filtered.map(s => ({ ...s, origin: {...s}, locks: { v: 'center', h: 'center' } }));
     
-    // Reset sequence to default
     sequence = sprites.map((_, i) => i);
-    
     selectedIdx = -1;
     updatePool();
     updateSequencer();
     render();
 }
 
-// Update "Available Sprites" Pool
+window.resetCurrentVariation = () => {
+    applyVariation(activeVar);
+    document.getElementById('aiStatus').innerText = `Variation ${activeVar} reset to defaults.`;
+};
+
 function updatePool() {
     const pool = document.getElementById('spritePool');
-    if(!pool) return;
     pool.innerHTML = "";
-    
     sprites.forEach((_, i) => {
         const item = document.createElement('div');
         item.className = "seq-item pool-item";
         item.innerText = i;
-        item.title = "Click to add to loop";
-        item.onclick = () => {
-            sequence.push(i);
-            updateSequencer();
-        };
+        item.onclick = () => { sequence.push(i); updateSequencer(); };
         pool.appendChild(item);
     });
 }
 
-// Update Active Loop
 function updateSequencer() {
     const list = document.getElementById('sequencerList');
-    if (!list) return;
     list.innerHTML = "";
+    document.getElementById('frameCount').innerText = `${sequence.length} Frames`;
     sequence.forEach((sIdx, orderIdx) => {
         const item = document.createElement('div');
         item.className = "seq-item";
         item.draggable = true;
         item.innerText = sIdx;
-        
         const rm = document.createElement('div');
         rm.className = "remove-btn";
         rm.innerText = "×";
         rm.onclick = (e) => { e.stopPropagation(); sequence.splice(orderIdx, 1); updateSequencer(); };
         item.appendChild(rm);
-
-        item.ondragstart = (e) => { e.dataTransfer.setData('idx', orderIdx); item.style.opacity = '0.5'; };
-        item.ondragend = () => item.style.opacity = '1';
+        item.ondragstart = (e) => { e.dataTransfer.setData('text/plain', orderIdx); item.style.opacity = '0.5'; };
         item.ondragover = (e) => e.preventDefault();
         item.ondrop = (e) => {
-            const from = e.dataTransfer.getData('idx');
-            const mov = sequence.splice(from, 1)[0];
-            sequence.splice(orderIdx, 0, mov);
+            e.preventDefault();
+            const fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
+            const movedItem = sequence.splice(fromIdx, 1)[0];
+            sequence.splice(orderIdx, 0, movedItem);
             updateSequencer();
         };
         list.appendChild(item);
     });
 }
 
-window.resetSequence = () => {
-    sequence = sprites.map((_, i) => i);
-    updateSequencer();
-};
+window.resetSequence = () => { sequence = sprites.map((_, i) => i); updateSequencer(); };
 
-// ... [Existing Anchor/Mouse logic remains same] ...
 window.applyPreset = (type) => {
     const applyAll = document.getElementById('applyAll').checked;
     const setSpriteLock = (s) => {
@@ -149,7 +151,6 @@ window.applyPreset = (type) => {
         if (type === 'bottom-left') { s.locks.v = 'bottom'; s.locks.h = 'left'; }
         if (type === 'bottom-right') { s.locks.v = 'bottom'; s.locks.h = 'right'; }
     };
-
     if (applyAll) {
         if (sprites.length === 0) return alert("No sprites!");
         sprites.forEach(s => setSpriteLock(s));
@@ -165,10 +166,8 @@ window.applyPreset = (type) => {
 window.resetAllAnchors = () => {
     sprites.forEach(s => s.locks = { v: 'center', h: 'center' });
     render();
-    document.getElementById('aiStatus').innerText = "All anchors reset.";
 };
 
-// Mouse Logic
 canvas.onmousedown = (e) => {
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
@@ -179,14 +178,8 @@ canvas.onmousedown = (e) => {
 
     const clicked = sprites.findIndex(s => mx > s.x-p && mx < s.x+s.w+p && my > s.y-p && my < s.y+s.h+p);
     
-    if (clicked !== -1) {
-        selectedIdx = clicked;
-        render(); 
-    } else {
-        selectedIdx = -1;
-        render();
-        return;
-    }
+    if (clicked !== -1) { selectedIdx = clicked; render(); } 
+    else { selectedIdx = -1; render(); return; }
 
     const s = sprites[clicked];
     if (Math.abs(mx - s.x) < p) dragEdge = 'left';
@@ -216,7 +209,6 @@ window.onmousemove = (e) => {
 
 window.onmouseup = () => { dragIdx = -1; dragEdge = null; };
 
-// Template
 canvas.ondblclick = (e) => {
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
@@ -269,8 +261,14 @@ function render() {
         ctx.stroke();
 
         ctx.fillStyle = '#00bcd4';
-        ctx.font = '10px Arial';
+        ctx.font = 'bold 10px Arial';
+        ctx.textAlign = 'left';
         ctx.fillText(i, s.x, s.y - 4);
+
+        ctx.fillStyle = 'rgba(255,255,255,0.8)';
+        ctx.font = '10px monospace';
+        ctx.textAlign = 'right';
+        ctx.fillText(`${Math.round(s.w)}x${Math.round(s.h)}`, s.x + s.w, s.y + s.h + 10);
     });
 }
 
